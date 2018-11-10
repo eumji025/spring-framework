@@ -127,11 +127,14 @@ public abstract class AbstractHandlerExceptionResolver implements HandlerExcepti
 	public ModelAndView resolveException(
 			HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
 
+		//判断是否有handler处理或者Handler对应的class
 		if (shouldApplyTo(request, handler)) {
 			if (this.logger.isDebugEnabled()) {
 				this.logger.debug("Resolving exception from handler [" + handler + "]: " + ex);
 			}
+			//准备结果 - 设置header --> cache-Controller
 			prepareResponse(ex, response);
+			//解决异常，子类实现
 			ModelAndView result = doResolveException(request, response, handler, ex);
 			if (result != null) {
 				logException(ex, request);
@@ -225,6 +228,7 @@ public abstract class AbstractHandlerExceptionResolver implements HandlerExcepti
 
 
 	/**
+	 * 实际处理异常的方法接口定义 - 留给子类实现
 	 * Actually resolve the given exception that got thrown during handler execution,
 	 * returning a {@link ModelAndView} that represents a specific error page if appropriate.
 	 * <p>May be overridden in subclasses, in order to apply specific exception checks.

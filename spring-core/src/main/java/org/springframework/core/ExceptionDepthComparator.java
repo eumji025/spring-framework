@@ -62,6 +62,13 @@ public class ExceptionDepthComparator implements Comparator<Class<? extends Thro
 		return (depth1 - depth2);
 	}
 
+	/**
+	 * 获取当前异常类和目标异常类相隔的深度 - 优先取隔得近的
+	 * @param declaredException
+	 * @param exceptionToMatch
+	 * @param depth
+	 * @return
+	 */
 	private int getDepth(Class<?> declaredException, Class<?> exceptionToMatch, int depth) {
 		if (exceptionToMatch.equals(declaredException)) {
 			// Found it!

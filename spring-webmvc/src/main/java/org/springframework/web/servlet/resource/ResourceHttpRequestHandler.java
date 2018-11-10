@@ -431,30 +431,32 @@ public class ResourceHttpRequestHandler extends WebContentGenerator
 
 		// For very general mappings (e.g. "/") we need to check 404 first
 		Resource resource = getResource(request);
+		//没有解析到资源
 		if (resource == null) {
 			logger.trace("No matching resource found - returning 404");
 			response.sendError(HttpServletResponse.SC_NOT_FOUND);
 			return;
 		}
 
+		//判断是否为options方法
 		if (HttpMethod.OPTIONS.matches(request.getMethod())) {
 			response.setHeader("Allow", getAllowHeader());
 			return;
 		}
 
-		// Supported methods and required session
+		// 判断httpmethod是否支持，判断Session是否需要
 		checkRequest(request);
 
-		// Header phase
+		// 如果lastModified没有变化，则304
 		if (new ServletWebRequest(request, response).checkNotModified(resource.lastModified())) {
 			logger.trace("Resource not modified - returning 304");
 			return;
 		}
 
-		// Apply cache settings, if any
+		// 缓存处理
 		prepareResponse(response);
 
-		// Check the media type for the resource
+		// 检查mediaType
 		MediaType mediaType = getMediaType(request, resource);
 		if (mediaType != null) {
 			if (logger.isTraceEnabled()) {
@@ -467,7 +469,7 @@ public class ResourceHttpRequestHandler extends WebContentGenerator
 			}
 		}
 
-		// Content phase
+		// head方法处理header
 		if (METHOD_HEAD.equals(request.getMethod())) {
 			setHeaders(response, resource, mediaType);
 			logger.trace("HEAD request - skipping content");
@@ -508,13 +510,16 @@ public class ResourceHttpRequestHandler extends WebContentGenerator
 					HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE + "' is not set");
 		}
 
+		//路径处理
 		path = processPath(path);
+		//recourse路径判断
 		if (!StringUtils.hasText(path) || isInvalidPath(path)) {
 			if (logger.isTraceEnabled()) {
 				logger.trace("Ignoring invalid resource path [" + path + "]");
 			}
 			return null;
 		}
+		//判断是否为encode的地址
 		if (isInvalidEncodedPath(path)) {
 			if (logger.isTraceEnabled()) {
 				logger.trace("Ignoring invalid resource path with escape sequences [" + path + "]");
@@ -523,6 +528,7 @@ public class ResourceHttpRequestHandler extends WebContentGenerator
 		}
 
 		ResourceResolverChain resolveChain = new DefaultResourceResolverChain(getResourceResolvers());
+		//解析resource
 		Resource resource = resolveChain.resolveResource(request, path, getLocations());
 		if (resource == null || getResourceTransformers().isEmpty()) {
 			return resource;
@@ -530,6 +536,7 @@ public class ResourceHttpRequestHandler extends WebContentGenerator
 
 		ResourceTransformerChain transformChain =
 				new DefaultResourceTransformerChain(resolveChain, getResourceTransformers());
+		//resource转换
 		resource = transformChain.transform(request, resource);
 		return resource;
 	}
@@ -552,6 +559,11 @@ public class ResourceHttpRequestHandler extends WebContentGenerator
 		return cleanLeadingSlash(path);
 	}
 
+	/**
+	 * 过滤双斜杠 //
+	 * @param path
+	 * @return
+	 */
 	private String cleanDuplicateSlashes(String path) {
 		StringBuilder sb = null;
 		char prev = 0;
@@ -575,6 +587,11 @@ public class ResourceHttpRequestHandler extends WebContentGenerator
 		return sb != null ? sb.toString() : path;
 	}
 
+	/**
+	 * 是否要加/开头
+	 * @param path
+	 * @return
+	 */
 	private String cleanLeadingSlash(String path) {
 		boolean slash = false;
 		for (int i = 0; i < path.length(); i++) {

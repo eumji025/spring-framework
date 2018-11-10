@@ -19,6 +19,7 @@ package org.springframework.web.method.support;
 import org.springframework.core.MethodParameter;
 
 /**
+ * 判断响应值类型是否为异步的响应类型 - 有关
  * A return value handler that supports async types. Such return value types
  * need to be handled with priority so the async value can be "unwrapped".
  *

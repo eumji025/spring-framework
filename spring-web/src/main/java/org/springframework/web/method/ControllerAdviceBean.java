@@ -107,7 +107,9 @@ public class ControllerAdviceBean implements Ordered {
 				AnnotatedElementUtils.findMergedAnnotation(beanType, ControllerAdvice.class);
 
 		if (annotation != null) {
+			//构建basePackages属性
 			this.basePackages = initBasePackages(annotation);
+			//构建使用的class列表
 			this.assignableTypes = Arrays.asList(annotation.assignableTypes());
 			this.annotations = Arrays.asList(annotation.annotations());
 		}
@@ -212,7 +214,9 @@ public class ControllerAdviceBean implements Ordered {
 	 */
 	public static List<ControllerAdviceBean> findAnnotatedBeans(ApplicationContext applicationContext) {
 		List<ControllerAdviceBean> beans = new ArrayList<ControllerAdviceBean>();
+		//获取所有的bean
 		for (String name : BeanFactoryUtils.beanNamesForTypeIncludingAncestors(applicationContext, Object.class)) {
+			//判断是否包含注解ControllerAdvice
 			if (applicationContext.findAnnotationOnBean(name, ControllerAdvice.class) != null) {
 				beans.add(new ControllerAdviceBean(name, applicationContext));
 			}

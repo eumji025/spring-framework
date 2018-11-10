@@ -1023,13 +1023,14 @@ public class DispatcherServlet extends FrameworkServlet {
 			HandlerExecutionChain mappedHandler, ModelAndView mv, Exception exception) throws Exception {
 
 		boolean errorView = false;
-
+		//存在异常的情况下
 		if (exception != null) {
-			if (exception instanceof ModelAndViewDefiningException) {
+			if (exception instanceof ModelAndViewDefiningException) {//如果是mv型异常，直接获取mv
 				logger.debug("ModelAndViewDefiningException encountered", exception);
 				mv = ((ModelAndViewDefiningException) exception).getModelAndView();
 			}
 			else {
+				//否则进行处理
 				Object handler = (mappedHandler != null ? mappedHandler.getHandler() : null);
 				mv = processHandlerException(request, response, handler, exception);
 				errorView = (mv != null);
@@ -1218,7 +1219,9 @@ public class DispatcherServlet extends FrameworkServlet {
 
 		// Check registered HandlerExceptionResolvers...
 		ModelAndView exMv = null;
+		//遍历所有的resolver进行处理 - 只要处理成功就跳出
 		for (HandlerExceptionResolver handlerExceptionResolver : this.handlerExceptionResolvers) {
+			//最重要的就是解析异常
 			exMv = handlerExceptionResolver.resolveException(request, response, handler, ex);
 			if (exMv != null) {
 				break;
@@ -1229,13 +1232,14 @@ public class DispatcherServlet extends FrameworkServlet {
 				request.setAttribute(EXCEPTION_ATTRIBUTE, ex);
 				return null;
 			}
-			// We might still need view name translation for a plain error model...
+			// 不存在视图，设置默认的视图
 			if (!exMv.hasView()) {
 				exMv.setViewName(getDefaultViewName(request));
 			}
 			if (logger.isDebugEnabled()) {
 				logger.debug("Handler execution resulted in exception - forwarding to resolved error view: " + exMv, ex);
 			}
+			//给request设置一些属性
 			WebUtils.exposeErrorRequestAttributes(request, ex, getServletName());
 			return exMv;
 		}

@@ -70,6 +70,7 @@ public class ExceptionHandlerMethodResolver {
 	 * @param handlerType the type to introspect
 	 */
 	public ExceptionHandlerMethodResolver(Class<?> handlerType) {
+		//获取ExceptionHandler注解对应的方法
 		for (Method method : MethodIntrospector.selectMethods(handlerType, EXCEPTION_HANDLER_METHODS)) {
 			for (Class<? extends Throwable> exceptionType : detectExceptionMappings(method)) {
 				addExceptionMapping(exceptionType, method);
@@ -85,6 +86,7 @@ public class ExceptionHandlerMethodResolver {
 	@SuppressWarnings("unchecked")
 	private List<Class<? extends Throwable>> detectExceptionMappings(Method method) {
 		List<Class<? extends Throwable>> result = new ArrayList<Class<? extends Throwable>>();
+		//获取ExceptionHandler的属性
 		detectAnnotationExceptionMappings(method, result);
 		if (result.isEmpty()) {
 			for (Class<?> paramType : method.getParameterTypes()) {
@@ -129,7 +131,7 @@ public class ExceptionHandlerMethodResolver {
 		Method method = resolveMethodByExceptionType(exception.getClass());
 		if (method == null) {
 			Throwable cause = exception.getCause();
-			if (cause != null) {
+			if (cause != null) {//如果无法匹配则通过case匹配
 				method = resolveMethodByExceptionType(cause.getClass());
 			}
 		}
@@ -143,8 +145,9 @@ public class ExceptionHandlerMethodResolver {
 	 * @return a Method to handle the exception, or {@code null} if none found
 	 */
 	public Method resolveMethodByExceptionType(Class<? extends Throwable> exceptionType) {
+		//根据异常类型匹配
 		Method method = this.exceptionLookupCache.get(exceptionType);
-		if (method == null) {
+		if (method == null) {//如果没匹配
 			method = getMappedMethod(exceptionType);
 			this.exceptionLookupCache.put(exceptionType, (method != null ? method : NO_METHOD_FOUND));
 		}
@@ -157,11 +160,16 @@ public class ExceptionHandlerMethodResolver {
 	private Method getMappedMethod(Class<? extends Throwable> exceptionType) {
 		List<Class<? extends Throwable>> matches = new ArrayList<Class<? extends Throwable>>();
 		for (Class<? extends Throwable> mappedException : this.mappedMethods.keySet()) {
+			//判断异常是否为次异常的实现类
 			if (mappedException.isAssignableFrom(exceptionType)) {
 				matches.add(mappedException);
 			}
 		}
 		if (!matches.isEmpty()) {
+			/**
+			 * 如果有多个的时候，会进行排序,优先去隔得近的
+			 * {@link ExceptionDepthComparator#getDepth}
+			 */
 			Collections.sort(matches, new ExceptionDepthComparator(exceptionType));
 			return this.mappedMethods.get(matches.get(0));
 		}

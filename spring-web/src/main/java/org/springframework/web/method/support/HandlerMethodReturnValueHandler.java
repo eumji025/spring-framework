@@ -20,6 +20,7 @@ import org.springframework.core.MethodParameter;
 import org.springframework.web.context.request.NativeWebRequest;
 
 /**
+ * 结果解析的handler 包含两个方法：1.判断类型是否支持 2.解析的逻辑
  * Strategy interface to handle the value returned from the invocation of a
  * handler method .
  *
