@@ -27,6 +27,10 @@ import org.springframework.web.method.support.HandlerMethodReturnValueHandler;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
 /**
+ * WebMvcConfigurer的抽象实现类，将方法默认进行空实现。（可用于子类自定义扩展，常用于子类去部分实现去做扩展，如配置拦截器。CORS配置，路径匹配器等）
+ * 使用的方式是结合注解EnableWebMvc，注解configuration
+ *
+ * 解析的过程参考 {@link DelegatingWebMvcConfiguration}
  * An implementation of {@link WebMvcConfigurer} with empty methods allowing
  * subclasses to override only the methods they're interested in.
  *

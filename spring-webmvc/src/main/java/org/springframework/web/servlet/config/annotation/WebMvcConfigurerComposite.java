@@ -29,9 +29,11 @@ import org.springframework.web.method.support.HandlerMethodReturnValueHandler;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
 /**
+ * 用来汇集WebMvcConfigurer实现类，主要使用在@EnableWebMvc的处理类{@link DelegatingWebMvcConfiguration}
  * A {@link WebMvcConfigurer} that delegates to one or more others.
  *
  * @author Rossen Stoyanchev
+ * @see DelegatingWebMvcConfiguration
  * @since 3.1
  */
 class WebMvcConfigurerComposite implements WebMvcConfigurer {

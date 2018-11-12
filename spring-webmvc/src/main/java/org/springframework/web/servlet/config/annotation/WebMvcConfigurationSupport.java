@@ -97,6 +97,8 @@ import org.springframework.web.servlet.view.ViewResolverComposite;
 import org.springframework.web.util.UrlPathHelper;
 
 /**
+ * 用来为spring mvc环境提供支持的java config。他的子类主要是用来记录@EnableWebMvc注解的配置
+ * 而当前类则主要是根据子类的配置来构建spring mvc必要的bean
  * This is the main class providing the configuration behind the MVC Java config.
  * It is typically imported by adding {@link EnableWebMvc @EnableWebMvc} to an
  * application {@link Configuration @Configuration} class. An alternative more
@@ -291,6 +293,7 @@ public class WebMvcConfigurationSupport implements ApplicationContextAware, Serv
 	}
 
 	/**
+	 * 获取插件的过程
 	 * Provide access to the shared handler interceptors used to configure
 	 * {@link HandlerMapping} instances with. This method cannot be overridden,
 	 * use {@link #addInterceptors(InterceptorRegistry)} instead.

@@ -30,6 +30,8 @@ import org.springframework.web.method.support.HandlerMethodReturnValueHandler;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
 /**
+ * 用于解析WebMvcConfigurer的属性信息（所以@EnableWebMvc修饰的配置类将被加载）
+ * 而其父类WebMvcConfigurationSupport则提供了很多构建spring mvcBean的方法
  * A subclass of {@code WebMvcConfigurationSupport} that detects and delegates
  * to all beans of type {@link WebMvcConfigurer} allowing them to customize the
  * configuration provided by {@code WebMvcConfigurationSupport}. This is the
@@ -40,7 +42,7 @@ import org.springframework.web.servlet.HandlerExceptionResolver;
  */
 @Configuration
 public class DelegatingWebMvcConfiguration extends WebMvcConfigurationSupport {
-
+	//所以的信息都汇总在WebMvcConfigurerComposite进行操作 => 其实现就是遍历configurers调用他们对应的方法
 	private final WebMvcConfigurerComposite configurers = new WebMvcConfigurerComposite();
 
 
