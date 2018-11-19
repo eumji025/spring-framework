@@ -77,21 +77,39 @@ public abstract class TransactionSynchronizationManager {
 
 	private static final Log logger = LogFactory.getLog(TransactionSynchronizationManager.class);
 
+	/**
+	 * 资源记录的集合
+	 */
 	private static final ThreadLocal<Map<Object, Object>> resources =
 			new NamedThreadLocal<Map<Object, Object>>("Transactional resources");
 
+	/**
+	 * 事务管理的集合
+	 */
 	private static final ThreadLocal<Set<TransactionSynchronization>> synchronizations =
 			new NamedThreadLocal<Set<TransactionSynchronization>>("Transaction synchronizations");
 
+	/**
+	 * 当前事务名称
+	 */
 	private static final ThreadLocal<String> currentTransactionName =
 			new NamedThreadLocal<String>("Current transaction name");
 
+	/**
+	 * 是否为只读标示
+	 */
 	private static final ThreadLocal<Boolean> currentTransactionReadOnly =
 			new NamedThreadLocal<Boolean>("Current transaction read-only status");
 
+	/**
+	 * 当前事务隔离级别
+	 */
 	private static final ThreadLocal<Integer> currentTransactionIsolationLevel =
 			new NamedThreadLocal<Integer>("Current transaction isolation level");
 
+	/**
+	 * 判断当前事务是否活跃
+	 */
 	private static final ThreadLocal<Boolean> actualTransactionActive =
 			new NamedThreadLocal<Boolean>("Actual transaction active");
 

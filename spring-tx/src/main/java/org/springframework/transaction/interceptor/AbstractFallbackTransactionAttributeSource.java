@@ -87,27 +87,24 @@ public abstract class AbstractFallbackTransactionAttributeSource implements Tran
 			return null;
 		}
 
-		// First, see if we have a cached value.
+		// 构建cache的Key - MethodClassKey
 		Object cacheKey = getCacheKey(method, targetClass);
+		//MethodClassKey重写的equals方法，比较相同的时候同时判断method和targetClass是否先攻
 		Object cached = this.attributeCache.get(cacheKey);
-		if (cached != null) {
-			// Value will either be canonical value indicating there is no transaction attribute,
-			// or an actual transaction attribute.
+		if (cached != null) {//存在则直接返回
 			if (cached == NULL_TRANSACTION_ATTRIBUTE) {
 				return null;
-			}
-			else {
+			} else {
 				return (TransactionAttribute) cached;
 			}
-		}
-		else {
-			// We need to work it out.
+		} else {
+			// 通过class和method计算事务属性对象TransactionAttribute
 			TransactionAttribute txAttr = computeTransactionAttribute(method, targetClass);
-			// Put it in the cache.
+			// P缓存
 			if (txAttr == null) {
 				this.attributeCache.put(cacheKey, NULL_TRANSACTION_ATTRIBUTE);
-			}
-			else {
+			} else {
+				//获取class和method的全限定名
 				String methodIdentification = ClassUtils.getQualifiedMethodName(method, targetClass);
 				if (txAttr instanceof DefaultTransactionAttribute) {
 					((DefaultTransactionAttribute) txAttr).setDescriptor(methodIdentification);
@@ -141,44 +138,43 @@ public abstract class AbstractFallbackTransactionAttributeSource implements Tran
 	 * @see #getTransactionAttribute
 	 */
 	protected TransactionAttribute computeTransactionAttribute(Method method, Class<?> targetClass) {
-		// Don't allow no-public methods as required.
+		// 必须是public方法
 		if (allowPublicMethodsOnly() && !Modifier.isPublic(method.getModifiers())) {
 			return null;
 		}
 
-		// Ignore CGLIB subclasses - introspect the actual user class.
+		// 忽略cglib的代理，获取真实的class
 		Class<?> userClass = ClassUtils.getUserClass(targetClass);
-		// The method may be on an interface, but we need attributes from the target class.
-		// If the target class is null, the method will be unchanged.
+		// 获取真实的方法信息
 		Method specificMethod = ClassUtils.getMostSpecificMethod(method, userClass);
-		// If we are dealing with method with generic parameters, find the original method.
+		// 获取桥接的方法（泛型）.
 		specificMethod = BridgeMethodResolver.findBridgedMethod(specificMethod);
 
-		// First try is the method in the target class.
+		//通过方法获取TransactionAttribute
 		TransactionAttribute txAttr = findTransactionAttribute(specificMethod);
 		if (txAttr != null) {
 			return txAttr;
 		}
 
-		// Second try is the transaction attribute on the target class.
+		// 没找到的情况下，通过class获取
 		txAttr = findTransactionAttribute(specificMethod.getDeclaringClass());
+		//必须是用户级别的方法，不是object等内置方法
 		if (txAttr != null && ClassUtils.isUserLevelMethod(method)) {
 			return txAttr;
 		}
 
 		if (specificMethod != method) {
-			// Fallback is to look at the original method.
+			// 两个方法不相同的情况下，继续找method对应的TransactionAttribute
 			txAttr = findTransactionAttribute(method);
 			if (txAttr != null) {
 				return txAttr;
 			}
-			// Last fallback is the class of the original method.
+			// 通过method对应的class找TransactionAttribute
 			txAttr = findTransactionAttribute(method.getDeclaringClass());
 			if (txAttr != null && ClassUtils.isUserLevelMethod(method)) {
 				return txAttr;
 			}
 		}
-
 		return null;
 	}
 

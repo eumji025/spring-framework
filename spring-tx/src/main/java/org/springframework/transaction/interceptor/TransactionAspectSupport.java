@@ -267,18 +267,19 @@ public abstract class TransactionAspectSupport implements BeanFactoryAware, Init
 	protected Object invokeWithinTransaction(Method method, Class<?> targetClass, final InvocationCallback invocation)
 			throws Throwable {
 
-		// If the transaction attribute is null, the method is non-transactional.
+		// 获取TransactionAttribute
 		final TransactionAttribute txAttr = getTransactionAttributeSource().getTransactionAttribute(method, targetClass);
+		//获取PlatformTransactionManager
 		final PlatformTransactionManager tm = determineTransactionManager(txAttr);
+		//获取方法描述
 		final String joinpointIdentification = methodIdentification(method, targetClass, txAttr);
-
+		//如果不是CallbackPreferringPlatformTransactionManager或事务属性为空
 		if (txAttr == null || !(tm instanceof CallbackPreferringPlatformTransactionManager)) {
-			// Standard transaction demarcation with getTransaction and commit/rollback calls.
+			// 使用标准的事务
 			TransactionInfo txInfo = createTransactionIfNecessary(tm, txAttr, joinpointIdentification);
 			Object retVal = null;
 			try {
-				// This is an around advice: Invoke the next interceptor in the chain.
-				// This will normally result in a target object being invoked.
+				// 回调
 				retVal = invocation.proceedWithInvocation();
 			}
 			catch (Throwable ex) {
@@ -287,17 +288,18 @@ public abstract class TransactionAspectSupport implements BeanFactoryAware, Init
 				throw ex;
 			}
 			finally {
+				//清楚transactionINfo
 				cleanupTransactionInfo(txInfo);
 			}
+			//AfterReturn处理
 			commitTransactionAfterReturning(txInfo);
 			return retVal;
-		}
-
-		else {
+		} else {
 			final ThrowableHolder throwableHolder = new ThrowableHolder();
 
 			// It's a CallbackPreferringPlatformTransactionManager: pass a TransactionCallback in.
 			try {
+				//使用可回调的manager执行并构造回调的实现
 				Object result = ((CallbackPreferringPlatformTransactionManager) tm).execute(txAttr,
 						new TransactionCallback<Object>() {
 							@Override
@@ -489,8 +491,7 @@ public abstract class TransactionAspectSupport implements BeanFactoryAware, Init
 			}
 			// The transaction manager will flag an error if an incompatible tx already exists.
 			txInfo.newTransactionStatus(status);
-		}
-		else {
+		} else {
 			// The TransactionInfo.hasTransaction() method will return false. We created it only
 			// to preserve the integrity of the ThreadLocal stack maintained in this class.
 			if (logger.isTraceEnabled())
@@ -664,7 +665,7 @@ public abstract class TransactionAspectSupport implements BeanFactoryAware, Init
 	 * Simple callback interface for proceeding with the target invocation.
 	 * Concrete interceptors/aspects adapt this to their invocation mechanism.
 	 */
-	protected interface InvocationCallback {
+	public interface InvocationCallback {
 
 		Object proceedWithInvocation() throws Throwable;
 	}

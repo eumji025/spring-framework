@@ -40,10 +40,9 @@ public class SpringTransactionAnnotationParser implements TransactionAnnotationP
 	@Override
 	public TransactionAttribute parseTransactionAnnotation(AnnotatedElement ae) {
 		AnnotationAttributes attributes = AnnotatedElementUtils.getMergedAnnotationAttributes(ae, Transactional.class);
-		if (attributes != null) {
+		if (attributes != null) {//存在注解信息，进行解析
 			return parseTransactionAnnotation(attributes);
-		}
-		else {
+		} else {//直接返回null
 			return null;
 		}
 	}
@@ -62,6 +61,7 @@ public class SpringTransactionAnnotationParser implements TransactionAnnotationP
 		rbta.setReadOnly(attributes.getBoolean("readOnly"));
 		rbta.setQualifier(attributes.getString("value"));
 		ArrayList<RollbackRuleAttribute> rollBackRules = new ArrayList<RollbackRuleAttribute>();
+		//回滚策略 ->RollbackRuleAttribute
 		Class<?>[] rbf = attributes.getClassArray("rollbackFor");
 		for (Class<?> rbRule : rbf) {
 			RollbackRuleAttribute rule = new RollbackRuleAttribute(rbRule);
@@ -72,6 +72,7 @@ public class SpringTransactionAnnotationParser implements TransactionAnnotationP
 			RollbackRuleAttribute rule = new RollbackRuleAttribute(rbRule);
 			rollBackRules.add(rule);
 		}
+		//不回滚策略 ->NoRollbackRuleAttribute
 		Class<?>[] nrbf = attributes.getClassArray("noRollbackFor");
 		for (Class<?> rbRule : nrbf) {
 			NoRollbackRuleAttribute rule = new NoRollbackRuleAttribute(rbRule);

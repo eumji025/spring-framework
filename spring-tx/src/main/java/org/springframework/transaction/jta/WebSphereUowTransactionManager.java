@@ -224,11 +224,13 @@ public class WebSphereUowTransactionManager extends JtaTransactionManager
 			// Use defaults if no transaction definition given.
 			definition = new DefaultTransactionDefinition();
 		}
-
+		//
 		if (definition.getTimeout() < TransactionDefinition.TIMEOUT_DEFAULT) {
 			throw new InvalidTimeoutException("Invalid transaction timeout", definition.getTimeout());
 		}
+		//获取传播特性
 		int pb = definition.getPropagationBehavior();
+		//是否存在事务
 		boolean existingTx = (this.uowManager.getUOWStatus() != UOWSynchronizationRegistry.UOW_STATUS_NONE &&
 				this.uowManager.getUOWType() != UOWSynchronizationRegistry.UOW_TYPE_LOCAL_TRANSACTION);
 
@@ -236,11 +238,13 @@ public class WebSphereUowTransactionManager extends JtaTransactionManager
 		boolean joinTx = false;
 		boolean newSynch = false;
 
-		if (existingTx) {
+		if (existingTx) {//已存在事务的情况下
+			//非事务执行 抛异常
 			if (pb == TransactionDefinition.PROPAGATION_NEVER) {
 				throw new IllegalTransactionStateException(
 						"Transaction propagation 'never' but existing transaction found");
 			}
+			//
 			if (pb == TransactionDefinition.PROPAGATION_NESTED) {
 				throw new NestedTransactionNotSupportedException(
 						"Transaction propagation 'nested' not supported for WebSphere UOW transactions");
