@@ -101,6 +101,7 @@ public abstract class TransactionSynchronizationUtils {
 	 * @see TransactionSynchronization#beforeCompletion()
 	 */
 	public static void triggerBeforeCompletion() {
+		//遍历TransactionSynchronization进行beforeCompletion (mybatis在这里面进行回滚)
 		for (TransactionSynchronization synchronization : TransactionSynchronizationManager.getSynchronizations()) {
 			try {
 				synchronization.beforeCompletion();

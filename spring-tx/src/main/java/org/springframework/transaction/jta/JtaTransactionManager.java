@@ -1045,6 +1045,7 @@ public class JtaTransactionManager extends AbstractPlatformTransactionManager
 			int jtaStatus = txObject.getUserTransaction().getStatus();
 			if (jtaStatus != Status.STATUS_NO_TRANSACTION) {
 				try {
+					//jta回滚操作
 					txObject.getUserTransaction().rollback();
 				}
 				catch (IllegalStateException ex) {

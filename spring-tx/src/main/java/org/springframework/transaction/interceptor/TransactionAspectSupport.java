@@ -275,26 +275,24 @@ public abstract class TransactionAspectSupport implements BeanFactoryAware, Init
 		final String joinpointIdentification = methodIdentification(method, targetClass, txAttr);
 		//如果不是CallbackPreferringPlatformTransactionManager或事务属性为空
 		if (txAttr == null || !(tm instanceof CallbackPreferringPlatformTransactionManager)) {
-			// 使用标准的事务
+			// 获取transaction信息，这里主要是创建或者根据原有的事务信息进行传播性的校验
 			TransactionInfo txInfo = createTransactionIfNecessary(tm, txAttr, joinpointIdentification);
 			Object retVal = null;
 			try {
-				// 回调
+				// 回调目标方法
 				retVal = invocation.proceedWithInvocation();
-			}
-			catch (Throwable ex) {
-				// target invocation exception
+			} catch (Throwable ex) {
+				// 发生异常时候的处理
 				completeTransactionAfterThrowing(txInfo, ex);
 				throw ex;
-			}
-			finally {
-				//清楚transactionINfo
+			} finally {
+				//清除transactionINfo
 				cleanupTransactionInfo(txInfo);
 			}
-			//AfterReturn处理
+			//没有异常的AfterReturn处理
 			commitTransactionAfterReturning(txInfo);
 			return retVal;
-		} else {
+		} else {//spring默认实现这个接口是为了支持IBM 的websphere，暂时不考虑
 			final ThrowableHolder throwableHolder = new ThrowableHolder();
 
 			// It's a CallbackPreferringPlatformTransactionManager: pass a TransactionCallback in.
@@ -532,6 +530,7 @@ public abstract class TransactionAspectSupport implements BeanFactoryAware, Init
 				logger.trace("Completing transaction for [" + txInfo.getJoinpointIdentification() +
 						"] after exception: " + ex);
 			}
+			//判断是否支持回滚
 			if (txInfo.transactionAttribute.rollbackOn(ex)) {
 				try {
 					txInfo.getTransactionManager().rollback(txInfo.getTransactionStatus());
@@ -549,10 +548,8 @@ public abstract class TransactionAspectSupport implements BeanFactoryAware, Init
 					logger.error("Application exception overridden by rollback error", ex);
 					throw err;
 				}
-			}
-			else {
-				// We don't roll back on this exception.
-				// Will still roll back if TransactionStatus.isRollbackOnly() is true.
+			} else {
+				// 不回滚则进行提交
 				try {
 					txInfo.getTransactionManager().commit(txInfo.getTransactionStatus());
 				}

@@ -351,7 +351,7 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 		}
 		//atransaction是否已经存在
 		if (isExistingTransaction(transaction)) {
-			// Existing transaction found -> check propagation behavior to find out how to behave.
+			// 检查已存在的transaction事务隔离级别，并获取transactionStatus
 			return handleExistingTransaction(definition, transaction, debugEnabled);
 		}
 
@@ -722,20 +722,20 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 	 */
 	@Override
 	public final void commit(TransactionStatus status) throws TransactionException {
-		if (status.isCompleted()) {
+		if (status.isCompleted()) {//如果事务已经完成，抛出异常
 			throw new IllegalTransactionStateException(
 					"Transaction is already completed - do not call commit or rollback more than once per transaction");
 		}
 
 		DefaultTransactionStatus defStatus = (DefaultTransactionStatus) status;
-		if (defStatus.isLocalRollbackOnly()) {
+		if (defStatus.isLocalRollbackOnly()) {//如果事务设置的readonly。则进行回滚
 			if (defStatus.isDebug()) {
 				logger.debug("Transactional code has requested rollback");
 			}
 			processRollback(defStatus);
 			return;
 		}
-		if (!shouldCommitOnGlobalRollbackOnly() && defStatus.isGlobalRollbackOnly()) {
+		if (!shouldCommitOnGlobalRollbackOnly() && defStatus.isGlobalRollbackOnly()) {//设置了全局回滚
 			if (defStatus.isDebug()) {
 				logger.debug("Global transaction is marked as rollback-only but transactional code requested commit");
 			}
@@ -762,25 +762,25 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 		try {
 			boolean beforeCompletionInvoked = false;
 			try {
-				prepareForCommit(status);
-				triggerBeforeCommit(status);
-				triggerBeforeCompletion(status);
+				prepareForCommit(status);//准备提交
+				triggerBeforeCommit(status);//提交前触发器
+				triggerBeforeCompletion(status);//完成前触发
 				beforeCompletionInvoked = true;
 				boolean globalRollbackOnly = false;
 				if (status.isNewTransaction() || isFailEarlyOnGlobalRollbackOnly()) {
 					globalRollbackOnly = status.isGlobalRollbackOnly();
 				}
-				if (status.hasSavepoint()) {
+				if (status.hasSavepoint()) {//释放安全点
 					if (status.isDebug()) {
 						logger.debug("Releasing transaction savepoint");
 					}
 					status.releaseHeldSavepoint();
 				}
-				else if (status.isNewTransaction()) {
+				else if (status.isNewTransaction()) {//如果是newTransaction状态
 					if (status.isDebug()) {
 						logger.debug("Initiating transaction commit");
 					}
-					doCommit(status);
+					doCommit(status);//正式提交
 				}
 				// Throw UnexpectedRollbackException if we have a global rollback-only
 				// marker but still didn't get a corresponding exception from commit.
@@ -788,27 +788,24 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 					throw new UnexpectedRollbackException(
 							"Transaction silently rolled back because it has been marked as rollback-only");
 				}
-			}
-			catch (UnexpectedRollbackException ex) {
-				// can only be caused by doCommit
+			} catch (UnexpectedRollbackException ex) {
+				// 完成后的触发
 				triggerAfterCompletion(status, TransactionSynchronization.STATUS_ROLLED_BACK);
 				throw ex;
-			}
-			catch (TransactionException ex) {
+			} catch (TransactionException ex) {
 				// can only be caused by doCommit
-				if (isRollbackOnCommitFailure()) {
-					doRollbackOnCommitException(status, ex);
-				}
-				else {
+				if (isRollbackOnCommitFailure()) {//如果是提交失败则进行回滚
+					doRollbackOnCommitException(status, ex);//进行回滚
+				} else {
+					//完成后的触发异常记录
 					triggerAfterCompletion(status, TransactionSynchronization.STATUS_UNKNOWN);
 				}
 				throw ex;
-			}
-			catch (RuntimeException ex) {
-				if (!beforeCompletionInvoked) {
-					triggerBeforeCompletion(status);
+			} catch (RuntimeException ex) {
+				if (!beforeCompletionInvoked) {//如果完成前没有正常操作
+					triggerBeforeCompletion(status);//执行完成前的触发
 				}
-				doRollbackOnCommitException(status, ex);
+				doRollbackOnCommitException(status, ex);//进行回滚
 				throw ex;
 			}
 			catch (Error err) {
@@ -822,15 +819,15 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 			// Trigger afterCommit callbacks, with an exception thrown there
 			// propagated to callers but the transaction still considered as committed.
 			try {
-				triggerAfterCommit(status);
+				triggerAfterCommit(status);//提交后的触发
 			}
 			finally {
-				triggerAfterCompletion(status, TransactionSynchronization.STATUS_COMMITTED);
+				triggerAfterCompletion(status, TransactionSynchronization.STATUS_COMMITTED);//完成后的记录
 			}
 
 		}
 		finally {
-			cleanupAfterCompletion(status);
+			cleanupAfterCompletion(status);//完成后，情况状态（有可能把之前挂起的事务放开）
 		}
 	}
 
@@ -843,7 +840,7 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 	 */
 	@Override
 	public final void rollback(TransactionStatus status) throws TransactionException {
-		if (status.isCompleted()) {
+		if (status.isCompleted()) {//如果是已完成,则抛异常无法回滚
 			throw new IllegalTransactionStateException(
 					"Transaction is already completed - do not call commit or rollback more than once per transaction");
 		}
@@ -861,18 +858,20 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 	private void processRollback(DefaultTransactionStatus status) {
 		try {
 			try {
-				triggerBeforeCompletion(status);
-				if (status.hasSavepoint()) {
+				//完成前操作
+				triggerBeforeCompletion(status); //
+				if (status.hasSavepoint()) {//如果设置的有savePoint
 					if (status.isDebug()) {
 						logger.debug("Rolling back transaction to savepoint");
 					}
+					//回滚到savePoint
 					status.rollbackToHeldSavepoint();
 				}
-				else if (status.isNewTransaction()) {
+				else if (status.isNewTransaction()) {//是否为NewTransaction,默认为true
 					if (status.isDebug()) {
 						logger.debug("Initiating transaction rollback");
 					}
-					doRollback(status);
+					doRollback(status);//进行回滚
 				}
 				else if (status.hasTransaction()) {
 					if (status.isLocalRollbackOnly() || isGlobalRollbackOnParticipationFailure()) {
@@ -899,9 +898,11 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 				triggerAfterCompletion(status, TransactionSynchronization.STATUS_UNKNOWN);
 				throw err;
 			}
+			//完成后操作
 			triggerAfterCompletion(status, TransactionSynchronization.STATUS_ROLLED_BACK);
 		}
 		finally {
+			//清除
 			cleanupAfterCompletion(status);
 		}
 	}

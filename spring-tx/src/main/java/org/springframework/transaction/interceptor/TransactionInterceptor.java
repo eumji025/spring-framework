@@ -85,7 +85,13 @@ public class TransactionInterceptor extends TransactionAspectSupport implements 
 		setTransactionAttributeSource(tas);
 	}
 
-
+	/**
+	 * 代理methodInterceptor的调用方法,这里回调父类的invokeWithinTransaction方法'而父类的方法通过的时候可能回调InvocationCallback的方法.
+	 * 最终调用目标的方法执行任务
+	 * @param invocation the method invocation joinpoint
+	 * @return
+	 * @throws Throwable
+	 */
 	@Override
 	public Object invoke(final MethodInvocation invocation) throws Throwable {
 		// Work out the target class: may be {@code null}.
